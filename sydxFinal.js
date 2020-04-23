@@ -1,12 +1,12 @@
 // ==UserScript==
-// @name         中国石油大学远程教育-插件合集-最终版（不上线）
+// @name         中国石油大学远程教育-插件合集-最终版
 // @namespace    1978805993@qq.com
-// @version      1.0.0
-// @description	 快速答题、自动答题、视频截图、视频加速等诸多功能。如出现服务器错误等信息,请联系我。可能是因为服务器没有开的原因。(除此之外还有视频加速的模块，因为需要手动复制所以就没有放到这个上面。如有需要请email我或者访问http://25by017051.wicp.vip工作室下载)。联系方式：QQ:1978805993 QQ邮箱:1978805993@qq.com
+// @version      1.0.5
+// @description	 快速答题、自动答题、视频截图、视频加速等诸多功能。如出现服务器错误等信息,请联系我。(联系方式：QQ:1978805993 QQ邮箱:1978805993@qq.com）
 
 // @author       1978805993
-// @match 		 http://www.cupde.cn/learning//entity/function/homework/*
-// @match 		 http://www.cupde.cn/workspace/sso/center/ssoLoginByUserCenter_login.*
+// @match 	     http://www.cupde.cn/learning//entity/function/homework/*
+// @match 	     http://www.cupde.cn/workspace/sso/center/ssoLoginByUserCenter_login.*
 // @include      http://www.cupde.cn/learning//entity/first/peTchCoursewareItem_toMode.*
 // @include      http://www.cupde.cn/learning/entity/first/peTchCoursewareItem_toMode.*
 // @include      http://www.cupde.cn/learning/entity/function/homework/homeworkPaperList_toHomework.*
@@ -18,7 +18,6 @@
 // @grant        GM_setClipboard
 // @license      MIT
 // @require 	https://code.jquery.com/jquery-3.4.1.min.js
-// @require 	https://html2canvas.hertzen.com/dist/html2canvas.js
 // ==/UserScript==
 
 
@@ -28,9 +27,9 @@
     // 设置修改后，需要刷新或重新打开网课页面才会生效
     var setting = {
         // 5E3 == 5000，科学记数法，表示毫秒数
-        time: 3E3 // 默认响应速度为5秒，不建议小于3秒   // 答题时间，和视频时间都依赖于此，建议请勿修改
+        time: 5E3 // 默认响应速度为5秒，不建议小于3秒   // 答题时间，和视频时间都依赖于此，建议请勿修改
         //, ip: "http://25by017051.wicp.vip"    // 如果使用本地不要忘记 http:// 的前缀 被坑过。
-        , ip: "http://106.52.186.98:9999"    // 如果使用本地不要忘记 http:// 的前缀 被坑过。
+        , ip: "http://39.98.129.122:9999"    // 如果使用本地不要忘记 http:// 的前缀 被坑过。
         //, ip: "http://" + "127.0.0.1:9999"
         , token: '' // 捐助用户可以使用上传选项功能，更精准的匹配答案，此处填写捐助后获取的识别码
         , work: 0 // 自动答题功能,如果 work === 1 代表是要开启自动答题模式。默认关闭。
@@ -153,7 +152,7 @@
     // 自动获取答案之后的自动答题
     sydxAnalysis.fillAnswer = function ($TiMu, obj) {
         var data = obj.data
-            , n = 0;
+        , n = 0;
         if (data == "正确") {
             data = 1;
         } else if (data == "错误") {
@@ -176,8 +175,11 @@
                 }
             } else {
                 if (val == data) {
-                    $oThis.click();
-                    n++;
+                    var oo = $oThis.attr("checked");
+                    if (oo != "checked") {
+                        $oThis.click();
+                        n++;
+                    }
                 }
             }
         });
@@ -541,14 +543,14 @@
         var tDUOXUAN_data = [];
         // 总分数
         var total_score = 0;
-        
-         // 获取总分，和题库里面的最高分作比较。如果比题库里面的分数高，则覆盖。否则题库不变保存相对最高分。
+
+        // 获取总分，和题库里面的最高分作比较。如果比题库里面的分数高，则覆盖。否则题库不变保存相对最高分。
         $(".answer_score").each(function(){
             var txt = $(this).html();
             var num = txt.split("：")[1].split("分")[0];
             total_score+=parseFloat(num);
         });
-        
+
         //单选
         $("#tDANXUAN div ul").each(function (index, item) {
             sydxAnalysis.getAnswer(tDANXUAN_data, item);
@@ -612,7 +614,8 @@
             '<div style="font-size: medium;">正在刷视频...(默认自动开启)</div>' +
             '<button style="margin-right: 10px;" id="btn_suspend">暂停</button>' +
             '<button style="margin-right: 10px;">折叠面板</button>' +
-            '<button style="margin-right: 10px;">截图</button>' +
+            '<button style="margin-right: 10px;">视频截图</button>' +
+            '<button >上/下键显示隐藏</button>' +
             '<div style="max-height: 300px; overflow-y: auto;">' +
             '<table border="1" style="font-size: 12px;">' +
             '<thead>' +
@@ -663,6 +666,19 @@
         });
         console.log("默认自动开启定时器");
         setting.loop = setInterval(sydxPalyer.myPlay, setting.time, true);
+
+
+        // 控制答题面板的显示隐藏
+        $(document).keydown(function (event) {
+            if (event.keyCode == 38) {
+                setting.div.detach();
+                //detach() 方法移除被选元素，包括所有的文本和子节点。然后它会保留数据和事件。该方法会保留移除元素的副本，允许它们在以后被重新插入。
+            } else if (event.keyCode == 40) {
+                setting.div.appendTo('body');
+            }
+        });
+
+
     }
 
 
@@ -729,11 +745,11 @@
             }
             //做出记录，去刷那些没有刷到的。
             $('<tr>' +
-                '<td style="text-align: center;">' + (setting.incomplete_videos[i] + 1) + '</td>' +
-                '<td title="点击切换至该视频" class="wsy_unBtn" >' + title + '</td>' +
-                '<td title="点击">' + '未完成' + '</td>' +
-                '</tr>'
-            ).appendTo(setting.div.find('tbody')).css('background-color', function () {
+              '<td style="text-align: center;">' + (setting.incomplete_videos[i] + 1) + '</td>' +
+              '<td title="点击切换至该视频" class="wsy_unBtn" >' + title + '</td>' +
+              '<td title="点击">' + '未完成' + '</td>' +
+              '</tr>'
+             ).appendTo(setting.div.find('tbody')).css('background-color', function () {
                 return 'rgba(0, 150, 136, 0.6)';
             }).on('click', '.wsy_unBtn', function () {
                 //点击切换至该视频
@@ -770,7 +786,7 @@
                 sydxPalyer.downloadIamge(dataUrl, name);
             });
         } catch (error) {
-			console.error(error);
+            console.error(error);
             alert("请刷新页面后重试！");
         }
     }
@@ -784,7 +800,7 @@
         a.dispatchEvent(event); // 触发a的单击事件
     }
 
-	/*
+    /*
 	 * 暂停。
 	 */
     sydxPalyer.myPlay_pause = function () {
@@ -1066,9 +1082,11 @@
 
     // 程序初始化
     sydxPalyer.init = function () {
-		//截图功能依赖的js
+        //截图功能依赖的js
         if (!$) {
         } else if (url_pathname.match('/peTchCoursewareItem_toMode')) {	//视频页面
+            // 导入截图js
+            $('<script type="text/javascript" src="http://html2canvas.hertzen.com/dist/html2canvas.js"></script>').appendTo("body");
             // 程序启动
             sydxPalyer.main();
             sydxPalyer.heXin();
@@ -1091,23 +1109,23 @@
             '<input type="button" id="imgBtn"  value="显示/隐藏[demo]预览图">'+
             '<img src="'+setting.ip+'/static/img/demo.png" style="display:none" id="img" >'+
             '</div>').appendTo('body').on('click', '#btn', function () {
-                   var username = setting.uploadDiv.find('input[name="username"]').val();
-                   if(username == ""){
-                      alert("请输入用户名");
-                       return false;
-                   }
-                   var file  = setting.uploadDiv.find('input[name="file"]').val();
-                   if(file == ""){
-                       alert("请选择需要打包的图片");
-                       return false;
-                   }
-               console.log(file);
-               // 提交表单
-               setting.uploadDiv.find("#fileUpForm").submit();
-              // 清空图片
-               setting.uploadDiv.find('input[name="file"]').val("");
+            var username = setting.uploadDiv.find('input[name="username"]').val();
+            if(username == ""){
+                alert("请输入用户名");
+                return false;
+            }
+            var file  = setting.uploadDiv.find('input[name="file"]').val();
+            if(file == ""){
+                alert("请选择需要打包的图片");
+                return false;
+            }
+            console.log(file);
+            // 提交表单
+            setting.uploadDiv.find("#fileUpForm").submit();
+            // 清空图片
+            setting.uploadDiv.find('input[name="file"]').val("");
         }).on('click', '#imgBtn', function () {
-                  setting.uploadDiv.find('#img').toggle();
+            setting.uploadDiv.find('#img').toggle();
         });
 
         // 面板的显示隐藏
@@ -1132,20 +1150,21 @@
             sydxAnalysis.uploadImg();
 
         } else if (url.match('/peTchCoursewareItem_toMode')) {	//视频页面
+
             // 视频程序启动
             sydxPalyer.init();
         } else if (url.match('/homeworkPaperList_toHomework')) {
             // 非主观题
-            if(!$(".list_title_new").html().match("主观题")){   
+            if(!$(".list_title_new").html().match("主观题")){
                 sydxAnalysis.addMsgDiv();
                 // 做题
                 sydxAnalysis.writeAnswer();
             }
         } else if (url.match('/homeworkPaperList_showAnswer')) {
-            
+
             // 非主观题
             if(!$(".list_title_new").html().match("主观题")){
-                
+
                 sydxAnalysis.addMsgDiv();
                 // 读题
                 sydxAnalysis.readAnswer();
@@ -1156,7 +1175,7 @@
                     "disabled": false
                 });
                 sydxAnalysis.writeAnswer();*/
-                
+
             }
         }
     }
