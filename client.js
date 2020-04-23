@@ -13,4 +13,4 @@
         document.head.appendChild(style);
     }
 
-  })
+  })();
