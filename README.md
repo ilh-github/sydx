@@ -96,11 +96,11 @@
 
 # 赞助
 
-<img src="https://github.com/ilh-github/sydx/blob/master/wx.d11c43d.png" alt="微信收款码"  width="250px">
+<img src="https://ilh-github.github.io/sydx/wx.d11c43d.png" alt="微信收款码"  width="250px">
 
-<img  src="https://github.com/ilh-github/sydx/blob/master/zfbhb.c9260fb.jpg" alt="支付宝红包码"  width="250px" >
+<img src="https://ilh-github.github.io/sydx/zfbhb.c9260fb.jpg" alt="支付宝红包码"  width="250px" >
 
-<img src="https://github.com/ilh-github/sydx/blob/master/zfb.26b5c28.jpg" alt="支付宝收款码"  width="250px" >
+<img src="https://ilh-github.github.io/sydx/zfb.26b5c28.jpg" alt="支付宝收款码"  width="250px" >
 
 
 
