@@ -83,13 +83,14 @@
     学习交流群QQ：
     <span style="user-select:all;">1097573154</span>
     &nbsp;&nbsp;
+</p>
+<p>
     <span >
         <a target="_blank" draggable="false" href="//shang.qq.com/wpa/qunwpa?idkey=cc57d6d510e9185aa4643444290f7e7b0d6d36143a8c63e416b09f92c2df8698">        
             <img border="0" draggable="false" src="http://pub.idqqimg.com/wpa/images/group.png" alt="石大远程[北京校区]-插" title="石大远程[北京校区]-插">
     </a>
 </span> 
 </p>
-
 
 
 
@@ -106,22 +107,25 @@
 
 # 祝语
 
-```
-本站坚持绿色无公害，请放心使用。
-在此承若：
-    1、免费
-    2、不会获取用户的任何信息
-    3、不会对用户的设配造成威胁
-最后感谢大家对我的支持，是因为大家对我的信任才让我坚持到现在！
-Thanks for using!
-Have a good journey!
-```
+> 本站坚持绿色无公害，请放心使用！
+>
+> 本人在此承若：
+>
+> 	 1、不会主动收取任何费用，可以免费使用
+> 	 
+> 	 2、不会获取用户的任何信息
+> 	 
+> 	 3、不会对用户的设配造成威胁
+>
+> 最后感谢大家对我的支持，是因为大家对我的信任才让我坚持到现在！
+>
+> Thanks for using!
+> Have a good journey!
 
-------
 
 
+# 结束语
 
-```
- 本站不对使用结果做任何担保，一切后果由使用者承担！
- Provided by me, all rights reserved
-```
+> 本站不对使用结果做任何担保，一切后果由使用者承担！
+>
+>  Provided by me, all rights reserved.
