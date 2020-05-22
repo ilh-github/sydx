@@ -408,11 +408,9 @@
             $(document).keydown(function (event) {
               if (event.keyCode == 38) {
                 setting.div.detach();
-                setting.buttons.detach();
                 //detach() 方法移除被选元素，包括所有的文本和子节点。然后它会保留数据和事件。该方法会保留移除元素的副本，允许它们在以后被重新插入。
               } else if (event.keyCode == 40) {
                 setting.div.appendTo('body');
-                setting.buttons.appendTo('body');
               }
             });
           };
