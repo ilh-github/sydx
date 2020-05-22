@@ -88,7 +88,7 @@
           var handlerInitIpcMain = function () {
 
             // 绑定渲染进程 nodeRequire
-            const { ipcRenderer } = require('electron');
+            const { ipcRenderer } = nodeRequire('electron');
             /**
              * 渲染进程绑定事件，等待主进程的调用。
              */
@@ -505,7 +505,7 @@
               return;
             }
 
-            var fs = require('fs');
+            var fs = nodeRequire('fs');
             //写入json文件选项
             function writeJson(filePath, params) {
               var str = JSON.stringify(params);//因为nodejs的写入文件只认识字符串或者二进制数，所以把json对象转换成字符串重新写入json文件中
@@ -518,7 +518,7 @@
               })
             }
 
-            const { remote } = require('electron');
+            const { remote } = nodeRequire('electron');
 
             // 打开文件选择框
             async function openDialog() {
@@ -548,7 +548,7 @@
            */
           var handlerUploadQuestionList = function () {
 
-            var fs = require('fs');
+            var fs = nodeRequire('fs');
             //通过传回来的页数，进行分页模拟
             function readFile(filePaths) {
               fs.readFile(filePaths, function (err, data) {
@@ -562,7 +562,7 @@
               })
             }
 
-            const { remote } = require('electron');
+            const { remote } = nodeRequire('electron');
 
             // 打开文件选择框
             async function openDialog() {
