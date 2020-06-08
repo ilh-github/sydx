@@ -734,11 +734,16 @@
          * @param {order} order
          */
         var doAnswerByOrder = function (order) {
-          setTimeout(function () {
+          setTimeout(async function () {
             // 获取要答题目的 Item
             var doQuestionItem = doQuestionList[order];
+
             // 得到 questionId
             var questionId = doQuestionItem.questionId;
+
+            // 得到 题目文字描述
+            var questionTitle = $(doQuestionItem.body).text();
+
             // 找到缓存中对应的答案。
             var questionItem = questionList.find((v) => {
               if (v.questionId == questionId) {
@@ -882,10 +887,83 @@
               } else {
                 log("查询到" + questionId + "的集合长度不为 1" + questionUnitList.length);
               }
-            } else {
+
+            }
+
+            // 没有获取到答案。尝试从学小易API接口获取答案。
+            else {
+              // 题目
+              let title = questionTitle;
+              // 获取答案
+              // 准备请求参数
+              var params = {
+                url: 'https://app.51xuexiaoyi.com/api/v1/searchQuestion',
+                type: "POST",
+                //async: false, // 搜索答题设置为同步，避免重复发送请求。
+                data: {
+                  "keyword": title
+                },
+                dataType: "json",
+                headers: {
+                  "token": "wS8db9Ep6sGYDRhQyOMEk4uiyBklTYPAq4ehVeLwqFa1MpcpihLI34lhDTkg",  //认证token秘钥
+                  "app-version": "1.0.6" // App版本号
+                }
+              }
+              // 得到请求结果
+              const respData = await handlerJqPromiseAjax(params).then(function (respData) { return respData });
+              /*api接口示意图
+{
+    "code": 200,
+    "msg": "请求成功",
+    "data": [
+        {
+            "q": "【这是简答题】哈哈哈哈哈哈",  //题目和选项
+            "a": "不宝贝还",//答案
+            "f": "eyJpdiI6Ijc5enpSMTd5TEFJc1VvY2NhS3M3blE9PSIsInZhbHVlIjoiYXV1MlNHZGtsU0UwTDVsaG1SeDQxSHQxQ3ExVkF2SFN2WmU2QTJTYmI1WXRkYURQNnVyZFhHdFZUQ1JIOElXXC9kU3Jkenl5bkd0aEpBald6Mis1dDhBeitBMUwwWlB3TkVUYXYzSVI1VFBkN0I0bnlEditieGcwcjhUWnQwUzRUN0lYUGREOUp4dkNVTXRSRElcLzVoZ2NWaDF2dlNNSjVyb3lBOG55a0hUeWxobExUOHdTOHk1dGMzWGNLS2E0M09KK0VseTJDTlR6NVdvbmJWV2Jzclg2VGNBR3pId0JIU3ZHdkgraFB2TDVsUFM1S1hOdW9HeUVRcXNid096c3FSOXc2bUlJSnBPbkJYQ2prcWtNT3c1V0Y0ZFlBVkhLWVhQYWo2cTNOUVNNU1d1d0praG9oeGpVQnFZMjZTcGdWR1p3NTQrWWVKU01cL25VdEFTTDFQcnJwMzdDbUlyRVlKejVvZ01QSGM0SGZBPSIsIm1hYyI6Ijg1MTUzZWJiODAwNGI1Mjc2ZDc0NDg3ODJjZTZlMGNjMzNlMTM5NWViYmM1ZmZlNjQxZTU0MTRlMjAxNjZhZTYifQ=="
+        },
+        {
+            "q": "【这是简答题】哈哈哈哈哈哈",
+            "a": "不宝贝还",
+            "f": "eyJpdiI6IktwMnc0emg4NFwvVjRHM1NUb084SmxBPT0iLCJ2YWx1ZSI6IkM4cXJxRWlmUSt0RCsrVTVHQ3dOeHBwczZTNE1ydUFaYVFteXFablZlVE1oMmxxNjhOdyt5Wk5FRUc1SzN5MkF4R1lEMTBKVUtSTHFGVWNmVDFvY0hSQmpPc2VPRVNUWUlwMzM0SzhsYWhycnRUSFhIaUU5ZjJUWlIyMEhjYlloMXVHMG0wZllveEEyZW1jOHFiTE5YVVJNWUM2b2NwckV5K3RVa0JxWnN1Q29XSFZiWnZwQmxXd085YkR3YVZrMU96bkpwaEd4dHZXTHZjR0pHbnNMbEpBOXByZWl6QTdDendodFBhaVRFMHBSeVhRcm1kTHlCMUxuOGtnNlpkcE15eDR3bWREcktaWHgwT2pwVUNSOXp1NCtUM1I0RlVcLzd2anlPXC9oeTRVU0NvRlZsN1hGV3FERXpnTXdWQXR0WGVKeXlUNWQ0a3FLWlhBdjNHVW1wNE9HTklrNExcL0kzK25hbzhQQ25UMW55Zz0iLCJtYWMiOiJjZWUyMzBhODY3NmRlYTY4YWM1YjQ2MmU4NjEzNWRiYjgyMzAxODJhNTRlYzNlNzlmM2MzZmUzMmUxODU3OTE0In0="
+        }
+    ],
+    "info": "",
+    "ask": ""
+}*/
               var msg = "该道题没有找到，尝试在题库中手动搜索！";
+              const code = respData.code;
+              if (code == 200) {
+
+                // 如果出现答案关闭自动下一题。
+                if (setting.loop) {
+                  setting.logDiv.children('button:eq(' + 2 + ')').click();
+                }
+
+                let dataList = respData.data;
+
+                let strHtml = "";
+                // 循环
+                dataList.forEach((v) => {
+                  let $oP = '<p>\
+                    \<span>题目：' + v.q + '</span>\
+                    \<br/>\
+                    \<span>答案：' + v.a + '</span>\
+                    \</p > ';
+                  strHtml += $oP;
+                });
+
+                msg = respData.msg;
+
+                // 设置提示消息
+                handlerSetMsgDiv("从学小易获取：" + msg);
+
+                // 设置答案到显示区域
+                handlerSetAnswerDiv("从学小易获取：" + strHtml);
+              } else {
+                msg = "该道题没有找到，尝试在题库中手动搜索！";
+                handlerSetErrorAnswerContent(msg);
+              }
               log(msg);
-              handlerSetErrorAnswerContent(msg);
             }
 
           }, 500)
@@ -895,7 +973,6 @@
          * 给右侧题目控制面板绑定监听事件
          */
         var handlerBindQuestionItem = function () {
-
 
           // 右侧选项卡
           $(".item").click(function () {
@@ -1033,10 +1110,10 @@
             handlerLayerMsg('脚本加载完毕！');
             this.initMyLog();
             log("欢迎使用客户端脚本，很高兴为您服务：");
-            log("来自github...");
-            log("本插件提供免费试用，如果您购买了，那说明您被骗了！");
-            log("插件提供方：https://github.com/ilh-github/sydx");
+            log("插件提供方/文档介绍：https://github.com/ilh-github/sydx");
 
+            log("本插件提供免费试用，如果您购买了，那说明您被骗了！");
+              
             // 初始化，程序页面
             handlerInitApp();
 
@@ -1081,4 +1158,5 @@
 
 
 
- 
+
+  
