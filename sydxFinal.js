@@ -1,7 +1,7 @@
 // ==UserScript==
-// @name         中国石油大学远程教育-插件合集-最终版
+// @name         中国石油大学（北京）网络教育-插件合集-集成版
 // @namespace    1978805993@qq.com
-// @version      1.0.6
+// @version      1.1.1
 // @description	 快速答题、自动答题、视频截图、视频加速等诸多功能。如出现服务器错误等信息,请联系我。(联系方式：QQ:1978805993 QQ邮箱:1978805993@qq.com）
 
 // @author       1978805993
@@ -27,12 +27,12 @@
     // 设置修改后，需要刷新或重新打开网课页面才会生效
     var setting = {
         // 5E3 == 5000，科学记数法，表示毫秒数
-        time: 5E3 // 默认响应速度为5秒，不建议小于3秒   // 答题时间，和视频时间都依赖于此，建议请勿修改
+        time: 2000 // 默认响应速度为5秒，不建议小于3秒   // 答题时间，和视频时间都依赖于此，建议请勿修改
         //, ip: "http://25by017051.wicp.vip"    // 如果使用本地不要忘记 http:// 的前缀 被坑过。
         , ip: "http://39.98.129.122:9999"    // 如果使用本地不要忘记 http:// 的前缀 被坑过。
         //, ip: "http://" + "127.0.0.1:9999"
         , token: '' // 捐助用户可以使用上传选项功能，更精准的匹配答案，此处填写捐助后获取的识别码
-        , work: 0 // 自动答题功能,如果 work === 1 代表是要开启自动答题模式。默认关闭。
+        , work: 1 // 自动答题功能,如果 work === 1 代表是要开启自动答题模式。默认关闭。
         , hide: 0 // 不加载答案搜索提示框，键盘↑和↓可以临时移除和加载，默认关闭
         , num: 0    // 题号，默认从零开始，可以在input框中指定位置
         , errors: []    // 累计出错的题号
@@ -44,7 +44,7 @@
         , rate: '1.0' // 默认播放速率，可选参数：['1.0', '1.25', '1.5']，默认'1.5'
         , count: [] //完成个数
         , incomplete_videos: [] //未处理的视频下标
-        , error_num: 3 //允许重复的次数，如果重复本次视频高于设置次数则跳过该视频[建议不要小于三次，可能受网络影响]
+        , error_num: 10 //允许重复的次数，如果重复本次视频高于设置次数则跳过该视频[建议不要小于三次，可能受网络影响]
         , error_videos: [] //	出错的视频下标
     },
         _self = unsafeWindow,
@@ -114,6 +114,11 @@
     /* 石油大学解析 */
     var sydxAnalysis = {};
 
+    // 提供给自动化的识别标识：success
+    sydxAnalysis.autoSuccess = function () {
+        $('<input type="hidden" value="success" id="homeworkInput"/>').appendTo("body");
+    };
+
     // 消息提示
     sydxAnalysis.addMsgDiv = function (msg) {
         if (!msg) {
@@ -150,8 +155,8 @@
 
 
     // 自动获取答案之后的自动答题
-    sydxAnalysis.fillAnswer = function ($TiMu, obj) {
-        var data = obj.data
+    sydxAnalysis.fillAnswer = function ($TiMu, daAn) {
+        var data = daAn
         , n = 0;
         if (data == "正确") {
             data = 1;
@@ -189,13 +194,19 @@
     //从服务器查询答案
     sydxAnalysis.findAnswer = async function () {
         if (!$('.view').length) {
+            // 提供给自动化的识别标识：success
+            sydxAnalysis.autoSuccess();
             return setting.div.children('div:eq(0)').data('html', '非自动答题页面').siblings('button:eq(0)').click();
         } else if (setting.max < 0 || setting.num < 0) {
             return setting.div.children('div:eq(0)').data('html', '范围参数应为 <font color="red">正整数</font>').siblings('button:eq(0)').click();
         } else if (($('.view').eq(setting.num).length == 0) || (setting.num >= ($('.view').length))) {
             sydxAnalysis.validation();
+            // 提供给自动化的识别标识：success
+            sydxAnalysis.autoSuccess();
             return setting.div.children('div:eq(0)').data('html', '答题完毕！').siblings('button:eq(0)').click();
         } else if (setting.num > setting.max) {
+            // 提供给自动化的识别标识：success
+            sydxAnalysis.autoSuccess();
             return setting.div.children('div:eq(0)').data('html', '区间答题完毕！').siblings('button:eq(0)').click();
         }
         var $TiMu = $('.view').eq(setting.num),
@@ -212,11 +223,34 @@
             title = title.substring(title.indexOf("’") + 1)
         }
 
+        if (title.indexOf("：") != -1) {
+            title = title.substring(0, title.indexOf("："))
+        }
+        if (title.indexOf("。") != -1) {
+            title = title.substring(0, title.indexOf("。"))
+        }
+        if (title.indexOf("，") != -1) {
+            title = title.substring(0, title.indexOf("，"))
+        }
         // 如果是图片的话获取src作为题目
         if ($TiMu.find('h3').eq(0) && $TiMu.find('h3').eq(0).html().match('<img')) {
             title = $TiMu.find('h3').eq(0).find("img").eq(0).attr("src");
         }
 
+        if (title.trim().length == 0) {
+            $(
+                '<tr>' +
+                '<td style="text-align: center;">' + ti_hao.trim().replace('.', '') + '</td>' +
+                '<td title="点击可复制">' + title + '</td>' +
+                '<td title="点击可复制" style="color:red;">' + "【该题目为空值】" + '</td>' +
+                '</tr>'
+            ).appendTo(setting.div.find('tbody'));
+            //添加到错误数组中
+            setting.errors.push(setting.num + 1);
+            //跳过
+            setting.num++
+            return false;
+        }
         var params = {
             url: setting.ip + '/onlineHomework/autoAnswerBytitle',
             async: false, // 搜索答题设置为同步，避免重复发送请求。
@@ -231,35 +265,49 @@
                 var obj = respData;
                 if (obj.code) {
                     setting.div.children('div:eq(0)').text('正在搜索答案...');
-                    var data = obj.data.replace(/&/g, '&amp;').replace(/<([^i])/g, '&lt;$1');
-                    data = data.substring(data.lastIndexOf(title[title.length - 1]) + 1)
-                    var index = data.lastIndexOf("答案");
-                    if (index == -1) {
-                        $(
-                            '<tr>' +
-                            '<td style="text-align: center;">' + ti_hao.trim().replace('.', '') + '</td>' +
-                            '<td title="点击可复制">' + title + '</td>' +
-                            '<td title="点击可复制" style="color:red;">' + data + "【请手动查询，以题目前半段/后半段为条件】" + '</td>' +
-                            '</tr>'
-                        ).appendTo(setting.div.find('tbody'));
-                        //添加到错误数组中
-                        setting.errors.push(setting.num + 1);
-                        //跳过
-                        setting.num++;
-                    } else {
-                        $(
-                            '<tr>' +
-                            '<td style="text-align: center;">' + ti_hao.trim().replace('.', '') + '</td>' +
-                            '<td title="点击可复制">' + title + '</td>' +
-                            '<td title="点击可复制">' + data + '</td>' +
-                            '</tr>'
-                        ).appendTo(setting.div.find('tbody')).css('background-color', function () {
-                            //答题
-                            var da = data.substring(index + 3).trim().replace(/ /g, "").replace(/,/g, "");
-                            obj.data = da;
-                            if (sydxAnalysis.fillAnswer($TiMu, obj)) setting.num++;
+                    const responseData = obj.data;
 
-                        });
+                    var test_num = 0;
+                    for (let i = 0; i < responseData.length; i++) {
+                        var element = responseData[i];
+                        var data = element.replace(/&/g, '&amp;');
+
+                        var index = data.lastIndexOf("答案");
+                        if (index == -1) {
+                            $(
+                                '<tr>' +
+                                '<td style="text-align: center;">' + ti_hao.trim().replace('.', '') + '</td>' +
+                                '<td title="点击可复制">' + title + '</td>' +
+                                '<td title="点击可复制" style="color:red;">' + data + "【请手动查询，以题目前半段/后半段为条件】" + '</td>' +
+                                '</tr>'
+                            ).appendTo(setting.div.find('tbody'));
+                            //添加到错误数组中
+                            setting.errors.push(setting.num + 1);
+                            //跳过
+                            test_num++;
+                        } else {
+                            $(
+                                '<tr>' +
+                                '<td style="text-align: center;">' + ti_hao.trim().replace('.', '') + '</td>' +
+                                '<td title="点击可复制">' + title + '</td>' +
+                                '<td title="点击可复制">' + data + '</td>' +
+                                '</tr>'
+                            ).appendTo(setting.div.find('tbody')).css('background-color', function () {
+                                //答题
+                                var da = data.substring(index + 3).trim().replace(/ /g, "").replace(/,/g, "");
+                                element = da;
+                                if (sydxAnalysis.fillAnswer($TiMu, element)) {
+                                    test_num++;
+                                    //break;
+                                };
+
+                            });
+                        }
+
+                    }
+
+                    if (test_num > 0) {
+                        setting.num++
                     }
 
                     if (setting.abcdefg) {
@@ -478,10 +526,13 @@
             });
         };
 
-        setTimeout(function(){
+        // 提供给自动化的识别标识：success
+        sydxAnalysis.autoSuccess();
+
+        setTimeout(function () {
             //滚动条到底
             $(document).scrollTop($(document).height() - $(window).height());
-        },500)
+        }, 500)
 
     }
 
@@ -545,10 +596,10 @@
         var total_score = 0;
 
         // 获取总分，和题库里面的最高分作比较。如果比题库里面的分数高，则覆盖。否则题库不变保存相对最高分。
-        $(".answer_score").each(function(){
+        $(".answer_score").each(function () {
             var txt = $(this).html();
             var num = txt.split("：")[1].split("分")[0];
-            total_score+=parseFloat(num);
+            total_score += parseFloat(num);
         });
 
         //单选
@@ -574,12 +625,14 @@
                 , "danxuan": JSON.stringify(tDANXUAN_data)
                 , "pandaun": JSON.stringify(tPANDUAN_data)
                 , "duoxuan": JSON.stringify(tDUOXUAN_data)
-                , "b1":total_score
+                , "b1": total_score
             }
         }
         log(params.data);
         //请求后台添加答案
         await jqPromiseAjax(params).then(function (respDate) {
+            // 提供给自动化的识别标识：success
+            sydxAnalysis.autoSuccess();
             log(respDate);
             sydxAnalysis.pingMsg(respDate.msg);
             if (respDate.code == -1) {
@@ -664,7 +717,7 @@
                 sydxPalyer.jietu();
             }
         });
-        console.log("默认自动开启定时器");
+        //console.log("默认自动开启定时器");
         setting.loop = setInterval(sydxPalyer.myPlay, setting.time, true);
 
 
@@ -873,11 +926,15 @@
         }
 
 
-        var title = sydxPalyer.getTitle($("#scormContent").contents().find("#courseTitle").html());
-        var cc = sydxPalyer.getTitle(setting.div.find("tbody tr td:eq(1)").html());
+        var title = sydxPalyer.getTitle($("#scormContent").contents().find("#courseTitle").html()).replace(/（/g,"(").replace(/）/g,")");
+        var cc = sydxPalyer.getTitle(setting.div.find("tbody tr td:eq(1)").html()).replace(/（/g,"(").replace(/）/g,")");
+        console.log(title,cc);
         // 只要包含就行 (如果连包含都不包含，直接 skip )
         if (!title.match(cc)) {
-            $(".wsy_unBtn:eq(0)").click();
+            if(title != cc){
+                console.log("点击++");
+                $(".wsy_unBtn:eq(0)").click();
+            }
         }
 
         //音量
@@ -908,7 +965,7 @@
         }
 
         error_size++;
-        //如果出现重复次数大于三次则，则先跳过该视频
+        //如果出现重复次数大于 setting.error_num 次则，则先跳过该视频
         // console.log("同一个视频重复的次数：" + error_size);
         if (error_size > setting.error_num) {
             sydxPalyer.myErrorFun();
@@ -1011,6 +1068,14 @@
                         }
                         // 设置学习时长（总共时长，设置为视频时长加上5分钟） ****
                         this.theSCOData.setValue("cmi.core.total_time", total_time)
+
+                        s = parseInt(time);  //单个节点计时器
+                        console.log("保存当前节点时间：", s);
+                        scount += parseInt(time);
+                        console.log("保存总节点时间：", scount);
+
+
+
                         //////////////////*******************************
                     }
                     var exit = this.theSCOData.getValue("cmi.core.exit");
@@ -1094,28 +1159,28 @@
     }
 
     // 首页截图。
-    sydxAnalysis.uploadImg = function(){
+    sydxAnalysis.uploadImg = function () {
         // 获取用户名称
         var name = $("#content_right .right_grxx .right_xinxi span").text();
         setting.uploadDiv = $(
             '<div style="font-size:16px;border: 2px dashed rgb(0, 85, 68); width: 330px; position: fixed; top: 15px; left: 15px; z-index: 99999; background-color: rgba(70, 196, 38, 0.6); overflow-x: auto;">' +
-            '<span>如果需要下面的预览图效果，请先去视频页面下载图片，然后选择图片完成打包工作。</span>'+
-            '<hr style="border:2px dashed  #000;"/>'+
-            '<form id="fileUpForm"  method="post" action="'+setting.ip+'/fileUpload" enctype="multipart/form-data">'+
-            '<input type="file" name="file"  multiple="multiple" accept="image/gif, image/png, image/jpg, image/jpeg"  >'+
-            '<input type="text" name="username" value="'+name+'" placeholder="请输入您的名称">'+
-            '<input type="button" id="btn"  value="上传/打包">'+
-            '</form>'+
-            '<input type="button" id="imgBtn"  value="显示/隐藏[demo]预览图">'+
-            '<img src="'+setting.ip+'/static/img/demo.png" style="display:none" id="img" >'+
+            '<span>如果需要下面的预览图效果，请先去视频页面下载图片，然后选择图片完成打包工作。</span>' +
+            '<hr style="border:2px dashed  #000;"/>' +
+            '<form id="fileUpForm"  method="post" action="' + setting.ip + '/fileUpload" enctype="multipart/form-data">' +
+            '<input type="file" name="file"  multiple="multiple" accept="image/gif, image/png, image/jpg, image/jpeg"  >' +
+            '<input type="text" name="username" value="' + name + '" placeholder="请输入您的名称">' +
+            '<input type="button" id="btn"  value="上传/打包">' +
+            '</form>' +
+            '<input type="button" id="imgBtn"  value="显示/隐藏[demo]预览图">' +
+            '<img src="' + setting.ip + '/static/img/demo.png" style="display:none" id="img" >' +
             '</div>').appendTo('body').on('click', '#btn', function () {
             var username = setting.uploadDiv.find('input[name="username"]').val();
-            if(username == ""){
+            if (username == "") {
                 alert("请输入用户名");
                 return false;
             }
-            var file  = setting.uploadDiv.find('input[name="file"]').val();
-            if(file == ""){
+            var file = setting.uploadDiv.find('input[name="file"]').val();
+            if (file == "") {
                 alert("请选择需要打包的图片");
                 return false;
             }
@@ -1136,8 +1201,9 @@
                 setting.uploadDiv.appendTo('body');
             }
         });
-
     }
+
+
 
 
     // 初始化（程序入口）
@@ -1155,7 +1221,7 @@
             sydxPalyer.init();
         } else if (url.match('/homeworkPaperList_toHomework')) {
             // 非主观题
-            if(!$(".list_title_new").html().match("主观题")){
+            if (!$(".list_title_new").html().match("主观题")) {
                 sydxAnalysis.addMsgDiv();
                 // 做题
                 sydxAnalysis.writeAnswer();
@@ -1163,7 +1229,7 @@
         } else if (url.match('/homeworkPaperList_showAnswer')) {
 
             // 非主观题
-            if(!$(".list_title_new").html().match("主观题")){
+            if (!$(".list_title_new").html().match("主观题")) {
 
                 sydxAnalysis.addMsgDiv();
                 // 读题
