@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         中国石油大学（北京）网络教育-插件合集-集成版
 // @namespace    1978805993@qq.com
-// @version      1.1.1
+// @version      1.1.4
 // @description	 快速答题、自动答题、视频截图、视频加速等诸多功能。如出现服务器错误等信息,请联系我。(联系方式：QQ:1978805993 QQ邮箱:1978805993@qq.com）
 
 // @author       1978805993
@@ -17,9 +17,17 @@
 // @grant        GM_xmlhttpRequest
 // @grant        GM_setClipboard
 // @license      MIT
-// @require 	https://code.jquery.com/jquery-3.4.1.min.js
+// @require 	 https://cdn.bootcdn.net/ajax/libs/jquery/3.4.1/jquery.min.js
 // ==/UserScript==
 
+/*
+    脚本介绍：
+        包含功能：在线作业、视频
+        使用介绍：
+                  1、复制该文本内容到油猴脚本。点击油猴===》添加新脚本===》复制===》保存。
+                  2、进入在线作业页面，自动答题。
+                  3、进入视频列表页面，自动刷。
+*/
 
 (function () {
     'use strict';
@@ -29,7 +37,7 @@
         // 5E3 == 5000，科学记数法，表示毫秒数
         time: 2000 // 默认响应速度为5秒，不建议小于3秒   // 答题时间，和视频时间都依赖于此，建议请勿修改
         //, ip: "http://25by017051.wicp.vip"    // 如果使用本地不要忘记 http:// 的前缀 被坑过。
-        , ip: "http://39.98.129.122:9999"    // 如果使用本地不要忘记 http:// 的前缀 被坑过。
+         , ip: "http://39.98.129.122:9999"    // 如果使用本地不要忘记 http:// 的前缀 被坑过。
         //, ip: "http://" + "127.0.0.1:9999"
         , token: '' // 捐助用户可以使用上传选项功能，更精准的匹配答案，此处填写捐助后获取的识别码
         , work: 1 // 自动答题功能,如果 work === 1 代表是要开启自动答题模式。默认关闭。
@@ -75,8 +83,8 @@
             return new Promise((resolve, reject) => {
                 $.ajax({
                     ...params,
-                    type: 'POST',
-                    dataType: 'json',
+                    type: params.type || 'POST',
+                    dataType: params.dataType || 'json',
                     success(res) {
                         resolve(res)
                     },
@@ -95,7 +103,12 @@
                         if (context != "") {
                             sydxAnalysis.pingMsg(context);
                             alert(context);
-                            return setting.div.children('div:eq(0)').data('html', context).siblings('button:eq(0)').click();
+                            try{
+                                return setting.div.children('div:eq(0)').data('html', context).siblings('button:eq(0)').click();
+                            }catch(e){
+
+                                return "";
+                            }
                         }
 
                     }
@@ -174,8 +187,8 @@
                         var oCc = $oThis.attr("checked");
                         if (oCc != "checked") {
                             $oThis.click();
-                            n++;
                         }
+                        n++;
                     }
                 }
             } else {
@@ -183,8 +196,8 @@
                     var oo = $oThis.attr("checked");
                     if (oo != "checked") {
                         $oThis.click();
-                        n++;
                     }
+                    n++;
                 }
             }
         });
@@ -1146,15 +1159,38 @@
     }
 
     // 程序初始化
-    sydxPalyer.init = function () {
+    sydxPalyer.init =  function () {
         //截图功能依赖的js
         if (!$) {
         } else if (url_pathname.match('/peTchCoursewareItem_toMode')) {	//视频页面
             // 导入截图js
             $('<script type="text/javascript" src="http://html2canvas.hertzen.com/dist/html2canvas.js"></script>').appendTo("body");
-            // 程序启动
-            sydxPalyer.main();
-            sydxPalyer.heXin();
+
+            var params = {
+                type:"get",
+                url: setting.ip + "/video/open"
+            }
+
+            //请求后台添加答案
+            jqPromiseAjax(params).then(function (respDate) {
+
+                if (respDate.code == -1) {
+                } else if (respDate.code == 100) {//历史记录不存在，尝试从远程题库中获取
+
+                } else if (respDate.code == 200) {
+
+                    sydxAnalysis.pingMsg("正在运行...");
+                    // 程序启动
+                    sydxPalyer.main();
+                    sydxPalyer.heXin();
+
+
+                }
+
+
+            });
+
+
         }
     }
 
@@ -1213,10 +1249,11 @@
         } else if (url.match('/ssoLoginByUserCenter_login')) {	//登录成功之后的页面
             // 登录成功之后的页面。http://www.cupde.cn/workspace/sso/center/ssoLoginByUserCenter_login.action
 
-            sydxAnalysis.uploadImg();
+            // sydxAnalysis.uploadImg();
 
         } else if (url.match('/peTchCoursewareItem_toMode')) {	//视频页面
 
+            sydxAnalysis.addMsgDiv("");
             // 视频程序启动
             sydxPalyer.init();
         } else if (url.match('/homeworkPaperList_toHomework')) {
