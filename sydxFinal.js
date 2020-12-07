@@ -55,10 +55,9 @@
         , error_num: 10 //允许重复的次数，如果重复本次视频高于设置次数则跳过该视频[建议不要小于三次，可能受网络影响]
         , error_videos: [] //	出错的视频下标
     },
-        _self = unsafeWindow,
         url = location.pathname,	//	/learning//entity/function/homework/homeworkPaperList_showAnswer.action
         search_str = window.location.search,	//浏览器地址栏参数
-        $ = _self.jQuery,
+        $ = window.jQuery,
         // 视频加速使用 仅开启video时，修改此处才会生效
         url_pathname = window.location.pathname,  // url
         mySuccess = 0, 	// 执行成功的次数
