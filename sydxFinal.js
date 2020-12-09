@@ -1,10 +1,10 @@
 // ==UserScript==
-// @name         中国石油大学（北京）网络教育-插件合集-集成版
-// @namespace    1978805993@qq.com
+// @name         中国石油大学（北京）网络教育-插件合集
+// @namespace    TimBL
 // @version      1.1.4
 // @description	 快速答题、自动答题、视频截图、视频加速等诸多功能。如出现服务器错误等信息,请联系我。(联系方式：QQ:1978805993 QQ邮箱:1978805993@qq.com）
 
-// @author       1978805993
+// @author       TimBL
 // @match 	     http://www.cupde.cn/learning//entity/function/homework/*
 // @match 	     http://www.cupde.cn/workspace/sso/center/ssoLoginByUserCenter_login.*
 // @include      http://www.cupde.cn/learning//entity/first/peTchCoursewareItem_toMode.*
@@ -39,7 +39,6 @@
         //, ip: "http://25by017051.wicp.vip"    // 如果使用本地不要忘记 http:// 的前缀 被坑过。
          , ip: "http://39.98.129.122:9999"    // 如果使用本地不要忘记 http:// 的前缀 被坑过。
         //, ip: "http://" + "127.0.0.1:9999"
-        , token: '' // 捐助用户可以使用上传选项功能，更精准的匹配答案，此处填写捐助后获取的识别码
         , work: 1 // 自动答题功能,如果 work === 1 代表是要开启自动答题模式。默认关闭。
         , hide: 0 // 不加载答案搜索提示框，键盘↑和↓可以临时移除和加载，默认关闭
         , num: 0    // 题号，默认从零开始，可以在input框中指定位置
@@ -267,7 +266,7 @@
             url: setting.ip + '/onlineHomework/autoAnswerBytitle',
             async: false, // 搜索答题设置为同步，避免重复发送请求。
             data: {
-                "token": (setting.token || 0),
+                "token": 0,
                 "title": encodeURIComponent(title.trim())
             }
         }
