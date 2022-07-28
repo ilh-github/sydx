@@ -2,7 +2,7 @@
 
 [TOC]
 
-# 注意！仓库自2022年7月28号转移至gitee：https://gitee.com/ilhbb/sydx
+# 注意！自2022年7月28号开始，本仓库不在维护，新仓库转移至gitee：https://gitee.com/ilhbb/sydx
 
 
 # 插件使用说明：
